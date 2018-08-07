@@ -23,6 +23,7 @@ import java.util.Map;
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class UserRepository {
 
+    private ExpressionParser parser = new SpelExpressionParser();
     private Map<String, User> users = new LinkedHashMap<>();
 
     @PostConstruct
@@ -30,6 +31,12 @@ public class UserRepository {
         merge(new User("Иван", "Иванов", ""));
         merge(new User("Петр", "Петров", ""));
         merge(new User("Сидор", "Сидоров", ""));
+        Iterator<Map.Entry<String, User>> entries = users.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<String, User> entry = entries.next();
+            EvaluationContext context = new StandardEvaluationContext(entry.getValue());
+            parser.parseExpression("email").setValue(context, entry.getValue().getFirstName() + "@mail.ru");
+        }
     }
 
     public Collection<User> getListUser() {
