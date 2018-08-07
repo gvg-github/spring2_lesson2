@@ -2,11 +2,16 @@ package ru.gvg.repository;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Repository;
 import ru.gvg.model.User;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,6 +23,7 @@ import java.util.Map;
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class UserRepository {
 
+    private ExpressionParser parser = new SpelExpressionParser();
     private Map<String, User> users = new LinkedHashMap<>();
 
     @PostConstruct
@@ -25,6 +31,12 @@ public class UserRepository {
         merge(new User("Иван", "Иванов", ""));
         merge(new User("Петр", "Петров", ""));
         merge(new User("Сидор", "Сидоров", ""));
+        Iterator<Map.Entry<String, User>> entries = users.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<String, User> entry = entries.next();
+            EvaluationContext context = new StandardEvaluationContext(entry.getValue());
+            parser.parseExpression("email").setValue(context, entry.getValue().getFirstName() + "@mail.ru");
+        }
     }
 
     public Collection<User> getListUser() {
